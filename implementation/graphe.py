@@ -101,3 +101,15 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
         else :
             currentIteration = nextIteration
             nextIteration = set()
+
+# Question 6 - renverser
+def renverser(H:Graph) -> Graph:
+    """
+    Calcule H^T le graphe transposé de H (graphe dont on a inversé le sens de toutes les arêtes)
+    
+    :param H: le graphe que l'on veut retourner 
+    :type H: Graph
+    :return: H^T le graphe retourné
+    :rtype: Graph
+    """
+    return Graph(H.N, H.B, [(y,x) for (x,y) in H.E])
