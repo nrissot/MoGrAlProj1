@@ -13,6 +13,9 @@ class Graph:
         self.B = set(B)
         self.E = set(E)
         self.V = self.N.union(self.B)
+    
+    def __str__(self) -> str:
+        return f"N\t{self.N}\nB\t{self.B}\nE\t{self.E}"
 
 class LevelGraph(Graph):
     Levels : list[set[node]]
@@ -20,9 +23,12 @@ class LevelGraph(Graph):
     def __init__(self, N:list[node], B:list[node], E:list[edge], Levels:list[set[node]]):
         super().__init__(N, B, E)
         self.Levels = Levels
+    
+    def __str__(self):
+        return super().__str__() + f"\nL\t{self.Levels}"
 
 # Question 4 - Construire GM
-def construire_GM(G:Graph, M:list[edge]) -> Graph :
+def construire_GM(G:Graph, M:set[edge]) -> Graph :
     """
     construit le graphe orienté G_M=(V', E') à partir de G(N⊎B, E) et d'un couplage M.
     Les arcs de E' sont obtenus :
@@ -83,6 +89,10 @@ def construire_niveaux(GM:LevelGraph) -> tuple[LevelGraph, int] :
     HL : list[set[node]] = [ ]
     HL.append(currentIteration)
     k = 0
+
+    if len(currentIteration) == 0:
+        return LevelGraph(HN, HB, HE, HL), k 
+
     shouldReturn : bool = False
     while True :
         for n in currentIteration:
@@ -142,14 +152,18 @@ def chemins_augmentants(HT:LevelGraph, k:int) -> list[edgePath]:
     """
 
     paths : list[edgePath] = [ ]
-    unused_edges : set[edge] = HT.E.copy()
+    usable_edges : set[edge] = HT.E.copy()
     # foreach free white node in the last level
     for b in HT.Levels[-1]:
         # recursive dfs trying to find a path (None if no path is found)
-        path : edgePath | None = _depth_first_search(b, unused_edges, HT.Levels[0])
+        path : edgePath | None = _depth_first_search(b, usable_edges, HT.Levels[0])
         if path != None:
             paths.append(path)
-            unused_edges.difference_update(path)
+            # calculate the edges that are no longer usable due to them containing a node 
+            # that was used to build a path
+            used_nodes = set([n for p in path for n in p ])
+            usable_edges = [(x,y) for (x,y) in usable_edges if x not in used_nodes and y not in used_nodes]
+                        
     return paths
 
 
@@ -176,3 +190,43 @@ def _depth_first_search(start:node, E:set[edge], final:set[node]) -> edgePath | 
             if rec != None :
                 return [(x,y), *rec]
     return None
+
+# Question 8 - HopcroftKarp
+def HopcroftKarp(G:Graph) -> set[edge]:
+    """
+    Construit un couplage parfait dans un graphe biparti
+
+    :param G: le graphe biparti donnée en entrée
+    :type G: Graph
+    :return: l'ensemble des arêtes qui forment une couplage parfait sur le graphe biparti
+    :rtype: set[edge]
+    """
+    M : set[edge] = set()
+    max_iter = 20
+    while True:
+        max_iter -= 1
+        if max_iter <= 0:
+            break
+        GM : Graph = construire_GM(G, M)
+        H, k = construire_niveaux(GM)
+        HT : LevelGraph = renverser(H)
+        P : list[edgePath] = chemins_augmentants(HT, k)
+        # flatten and flip the edges so that they face N -> B
+        PreparedP : set[edge] = set([(y,x) if x in G.B else (x,y) for p in P for (x,y) in p])
+        M = _différence_symétrique(M, PreparedP)
+        if len(P) == 0 :
+            return M
+
+def _différence_symétrique(A:set[edge], B:set[edge]) :
+    """
+    Retourne un ensemble composé de la différence symétrique de deux ensemble ( X ⊕ Y = ( X ∪ Y ) - ( X ∩ Y ))
+    
+    :param A: Premier ensemble
+    :type A: set[edge]
+    :param B: Second ensemble
+    :type B: set[edge]
+    :return: la différence symétrique des deux ensembles A et B
+    :rtype: set[edge]
+    """
+    # return the symetrical difference (X ⊕ Y = (X ∪ Y ) - (X ∩ Y ))
+    return A.union(B) - A.intersection(B)
