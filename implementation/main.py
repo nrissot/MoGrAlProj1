@@ -1,4 +1,5 @@
 from graphe import *
+from lectureEcriture import *
 
 def mainTest():
     # create a test graph
@@ -39,17 +40,18 @@ def mainTest():
     # the nodes are considered is random. 
     print(paths)
 
-def main():
+def mainTest2():
     E : list[edge] = [("n1", "b2"), ("n1", "b3"), ("n2", "b1"), ("n2", "b2"), ("n3", "b1"), ("n3", "b3"), ("n3", "b4"), ("n3", "b5"), ("n3", "b6"), ("n4", "b2"), ("n4", "b3"), ("n4", "b7"), ("n5", "b4"), ("n5", "b5"), ("n5", "b6"), ("n5", "b7"), ("n6", "b3"), ("n6", "b7"), ("n7", "b5"), ("n7", "b8"), ("n8", "b8")] 
     N : list[node] = ["n" + str(i+1) for i in range(8)]
     B : list[node] = ["b" + str(i+1) for i in range(8)]
-    # E : list[edge] = [("n1", "b1"), ("n1", "b2"), ("n2", "b1"), ("n2", "b2")]
-    # B : list[node] = ["b1","b2"]
-    # N : list[node] = ["n1","n2"]
     G : Graph = Graph(N, B, E)
     M : list[edge] = HopcroftKarp(G)
     print(f"B : {G.B}\nN : {G.N}\nM : {M}")
 
+def main():
+    G : Graph = lectureGraphe()
+    M : list[edge] = HopcroftKarp(G)
+    print(f"M: {M}")
+
 if __name__ == "__main__":
-    # mainTest()
     main()

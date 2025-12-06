@@ -152,7 +152,8 @@ def chemins_augmentants(HT:LevelGraph, k:int) -> list[edgePath]:
     """
 
     paths : list[edgePath] = [ ]
-    usable_edges : set[edge] = HT.E.copy()
+    usable_edges : list[edge] = HT.E.copy()
+
     # foreach free white node in the last level
     for b in HT.Levels[-1]:
         # recursive dfs trying to find a path (None if no path is found)
@@ -161,9 +162,16 @@ def chemins_augmentants(HT:LevelGraph, k:int) -> list[edgePath]:
             paths.append(path)
             # calculate the edges that are no longer usable due to them containing a node 
             # that was used to build a path
-            used_nodes = set([n for p in path for n in p ])
-            usable_edges = [(x,y) for (x,y) in usable_edges if x not in used_nodes and y not in used_nodes]
-                        
+            nodesAlongThePath : set[node] = set()
+            for (x, y) in path:
+                nodesAlongThePath.add(x)
+                nodesAlongThePath.add(y)
+            new_usable_edges : list[edge] = [ ]
+            for (x,y) in usable_edges:
+                if not (x in nodesAlongThePath or y in nodesAlongThePath):
+                    new_usable_edges.append((x,y))
+            usable_edges = new_usable_edges
+                                    
     return paths
 
 
@@ -202,19 +210,19 @@ def HopcroftKarp(G:Graph) -> set[edge]:
     :rtype: set[edge]
     """
     M : set[edge] = set()
-    max_iter = 20
     while True:
-        max_iter -= 1
-        if max_iter <= 0:
-            break
         GM : Graph = construire_GM(G, M)
         H, k = construire_niveaux(GM)
         HT : LevelGraph = renverser(H)
         P : list[edgePath] = chemins_augmentants(HT, k)
         # flatten and flip the edges so that they face N -> B
         PreparedP : set[edge] = set([(y,x) if x in G.B else (x,y) for p in P for (x,y) in p])
+        print("\n\nP", P, PreparedP)
+        print("\nM", M)
         M = _différence_symétrique(M, PreparedP)
+        print("\nnew M" , M)
         if len(P) == 0 :
+            print(M)
             return M
 
 def _différence_symétrique(A:set[edge], B:set[edge]) :
