@@ -1,4 +1,4 @@
-from graphe import Graph, LevelGraph, construire_GM, construire_niveaux, renverser
+from graphe import *
 
 def main():
     # create a test graph
@@ -29,6 +29,14 @@ def main():
 
     # assert that H^T is the expected graph
     assert HT.E == set([("b2", "n1"), ("b3", "n1"), ("b2", "n4"), ("b3", "n4"), ("b7", "n4"), ("b3", "n6"), ("b7", "n6"), ("n2", "b2"), ("n3", "b3"), ("n5", "b7"), ("b1", "n2"), ("b1", "n3"), ("b4", "n3"), ("b5", "n3"), ("b6", "n3"), ("b4", "n5"), ("b5", "n5"), ("b6", "n5")])
+
+    # Question 7
+    paths = chemins_augmentants(HT, k)
+
+    # assert (using our eyes...) that the path are expected
+    # we cant easily create test conditions because due to the use of sets the order in wich
+    # the nodes are considered is random. 
+    print(paths)
 
 if __name__ == "__main__":
     main()
