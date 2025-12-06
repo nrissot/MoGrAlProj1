@@ -2,7 +2,6 @@ type node = str
 type edge = tuple[str, str]
 
 class Graph:
-    # change the lists to sets ?
     V : set[node]
     N : set[node]
     B : set[node]
@@ -33,15 +32,24 @@ def construire_GM(G:Graph, M:list[edge]) -> Graph :
     """
     return Graph(G.N, G.B, [((y,x) if ((x,y) in M) else (x,y)) for (x,y) in G.E])
 
+# Question 5 - construire_niveaux
 def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
-    # 1. identifier les sommets N qui sont libres
-    # 2. identifier les sommets B qui sont libres
-    # 3. parcours en largeur à partir des sommets N libres
-    #   3.1 noter tout les sommet voisins des sommets actuellement considérés pour la prochaine itération
-    #   3.2 agrandir le graphe H (ajouter les sommets et les arêtes)
-    #   3.3 incrementer k
-    # 4. retourner H, k
-    
+    """
+    Construit un graphe orienté sans cycle H = (VH , EH ) a partir du graphe GM passé en argument.
+    Ce graphe contient des niveaux de sommets, chaque niveau ne contenant (en alternance) 
+    que des sommets de N ou que des sommets de B.
+
+    Le premier niveau (niveau 0) est celui contenant les sommets libres de N dans GM. 
+    Les niveaux successifs sont obtenus par un parcours en largeur depuis chacun des sommets 
+    libres de N dans GM 
+
+    :param GM: le graphe GM a partir duquel on va construire H.
+    :type GM: Graph
+    :return: H le graphe orienté sans cycle construit, et k la plus petite distance 
+     dans GM entre un sommet libre de N et un sommet libre de B. 
+    :rtype: tuple[Graph, int]
+    """
+
     # identify the free nodes. freeNodes = allNodes \ captiveNodes (all of thoses are set of nodes)
     # captive nodes are black (resp white) node on the end (resp beginning) of an arc.
     captiveN: set[node] = set()
@@ -60,8 +68,8 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
     nextIteration : set[node] = set()
     currentIteration : set[node] = freeN.copy()
 
-    # TODO : if freeN is not reused, drop the .copy()
-    HN : set[node] = freeN.copy()
+    # copy() is not needed since we dont modify freeN. 
+    HN : set[node] = freeN
     HB : set[node] = set()
     HE : set[edge] = set()
 
@@ -73,17 +81,23 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
             for (x, y) in GM.E:
                 if x == n:
                     nextIteration.add(y)
+                    # check wether the node is black or white node, and thus 
+                    # where it should be stored in the new H Graph.
                     if k %2 == 0:
                         HB.add(y)
+                        # if we reached a free white node, we have to break after this iteration
                         if y in freeB:
                             shouldReturn = True
                     else :
                         HN.add(y)
+                    # add the edge in H
                     HE.add((x,y))
+        # this iteration is done, increment the iteration counter
         k+=1
+
+        # if we reached a free white node 
         if shouldReturn:
             return Graph(HN, HB, HE), k
         else :
             currentIteration = nextIteration
             nextIteration = set()
-
