@@ -1,5 +1,6 @@
 type node = str
-type edge = tuple[str, str]
+type edge = tuple[node, node]
+type nodePath = list[node]
 
 class Graph:
     V : set[node]
@@ -12,6 +13,13 @@ class Graph:
         self.B = set(B)
         self.E = set(E)
         self.V = self.N.union(self.B)
+
+class LevelGraph(Graph):
+    L : list[set[node]]
+
+    def __init__(self, N:list[node], B:list[node], E:list[edge], L:list[set[node]]):
+        super().__init__(N, B, E)
+        self.L = L
 
 # Question 4 - Construire GM
 def construire_GM(G:Graph, M:list[edge]) -> Graph :
@@ -33,7 +41,7 @@ def construire_GM(G:Graph, M:list[edge]) -> Graph :
     return Graph(G.N, G.B, [((y,x) if ((x,y) in M) else (x,y)) for (x,y) in G.E])
 
 # Question 5 - construire_niveaux
-def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
+def construire_niveaux(GM:LevelGraph) -> tuple[LevelGraph, int] :
     """
     Construit un graphe orienté sans cycle H = (VH , EH ) a partir du graphe GM passé en argument.
     Ce graphe contient des niveaux de sommets, chaque niveau ne contenant (en alternance) 
@@ -44,10 +52,10 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
     libres de N dans GM 
 
     :param GM: le graphe GM a partir duquel on va construire H.
-    :type GM: Graph
+    :type GM: LevelGraph
     :return: H le graphe orienté sans cycle construit, et k la plus petite distance 
      dans GM entre un sommet libre de N et un sommet libre de B. 
-    :rtype: tuple[Graph, int]
+    :rtype: tuple[LevelGraph, int]
     """
 
     # identify the free nodes. freeNodes = allNodes \ captiveNodes (all of thoses are set of nodes)
@@ -72,7 +80,7 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
     HN : set[node] = freeN
     HB : set[node] = set()
     HE : set[edge] = set()
-
+    HL : list[set[node]] = [currentIteration]
     k = 0
     shouldReturn : bool = False
     while True :
@@ -92,24 +100,25 @@ def construire_niveaux(GM:Graph) -> tuple[Graph, int] :
                         HN.add(y)
                     # add the edge in H
                     HE.add((x,y))
+        
         # this iteration is done, increment the iteration counter
         k+=1
-
+        HL.append(nextIteration)
         # if we reached a free white node 
         if shouldReturn:
-            return Graph(HN, HB, HE), k
+            return LevelGraph(HN, HB, HE, HL), k
         else :
             currentIteration = nextIteration
             nextIteration = set()
 
 # Question 6 - renverser
-def renverser(H:Graph) -> Graph:
+def renverser(H:LevelGraph) -> LevelGraph:
     """
     Calcule H^T le graphe transposé de H (graphe dont on a inversé le sens de toutes les arêtes)
     
     :param H: le graphe que l'on veut retourner 
-    :type H: Graph
+    :type H: LevelGraph
     :return: H^T le graphe retourné
-    :rtype: Graph
+    :rtype: LevelGraph
     """
-    return Graph(H.N, H.B, [(y,x) for (x,y) in H.E])
+    return LevelGraph(H.N, H.B, [(y,x) for (x,y) in H.E], H.L)

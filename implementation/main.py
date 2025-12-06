@@ -1,4 +1,4 @@
-from graphe import Graph, construire_GM, construire_niveaux, renverser
+from graphe import Graph, LevelGraph, construire_GM, construire_niveaux, renverser
 
 def main():
     # create a test graph
@@ -17,7 +17,7 @@ def main():
 
     # Question 5
     H, k = construire_niveaux(GM)
-    
+ 
     # assert that H is the expected graph
     assert k == 3
     assert H.N == set(["n1", "n4", "n6", "n2", "n3", "n5"])
