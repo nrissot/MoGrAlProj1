@@ -19,11 +19,19 @@ Donc $\nexists (v_1, v_2) \in E \text{ tq } v_1, v_2 \in B$ et $\nexists (v_1, v
 
 **Question 2** *Montrez que ce graphe contient au plus 2n arêtes, où n est le nombre de cases de l’échiquier mutilé.*
 
-???
+On note $n_{i,j}$ le sommet du graphe représentant la case de l'échiquier aux coordonnées $i,j$ et soit $m$ le nombre d'arêtes de $G$ ($m = |E|$).
+
+Nous cherchons a reconstruire un graphe mutilé en ajoutant une par une les cases. Pour cela on choisis de les ajouters dans l'ordre suivant : soit $n_{i,j}$ la dernière case ajoutée et on ajoute $n'_{i',j'}$ tel que $min(j') > j$ et $i'=i$ si aucune case ne respect ces propriété dans notre échiquier, alors on choisis la case respectant $min(i') > i$; $min(j')$  sinon. (ie. la case la plus en haut a gauche n'ayant pas encore été ajoutée.)
+
+<u><b>Cas de base</b></u> : Prenons un échiquier contenant une seule case, ce graphe respecte bien la propriétée $m = 0 \le 2n = 2$
+
+<u><b>Récurrence</b></u> : Prenons un échiquier mutilé de taille $N - 1$, auquel on veut rajouter une case $n_{i',j'}$. Par hypothèse de récurrence, il possède la propriété : $(m - 2) \le 2(n - 1) $.
+
+Rajoutons cette case. De par notre méthode de construction : cette nouvelle case peut avoir pour voisins $n_{i'-1,j'}$ ou $n_{i', j'-1}$. On ajoute donc au maximum 2 arrêtes si ces deux voisins existent. ce qui nous donne donc $(m-2)+2\le 2(n - 1) + 1$. On a bien : $m \le 2n$
 
 **Question 3** *Expliquez en quoi un couplage parfait, dans le graphe représentant l’échiquier mutilé, est utile pour le paver des dominos.*
 
-Chaque arête de $E$ represente une paire de cases adjacentes de l'échiquier. Un couplage est donc une collections de paires de cases adjacentes, ne se chevauchant pas les unes les autres.
+Chaque arête de $E$ represente une paire de cases adjacentes de l'échiquier. Un couplage est un sous ensemble de $E$, c'est a dire une collection de paires de cases adjacentes, ne se chevauchant pas les unes les autres.
 
 Un couplage parfait est donc une collection de paire de cases adjacentes telles que toutes les cases soient incluses, sans qu'il y-ait de de chevauchement.
 
