@@ -1,10 +1,8 @@
 from graphe import Graph, node, edge
 from math import log10
 
-IMPORT_PATH = "data/echiquier.txt"
-EXPORT_PATH = "data/pavage.txt"
 
-def lectureGraphe(path:str = IMPORT_PATH) -> tuple[Graph, int] :
+def lectureGraphe(path:str) -> tuple[Graph, int] :
     formatGraphe : int = 0
     with open(path) as file:
         formatGraphe = int(file.readline())
@@ -36,8 +34,8 @@ def lectureGraphe(path:str = IMPORT_PATH) -> tuple[Graph, int] :
 def _node_id(x:int, y:int, tag:str) :
     return f"{tag}-{x}:{y}"
 
-def ecriturePavage(M:list[edge],Dim: int):
-    with open(EXPORT_PATH, "w", encoding="utf-8") as file:
+def ecriturePavage(M:list[edge],Dim: int, nom: str):
+    with open("data/" + nom + "txt", "w", encoding="utf-8") as file:
         to_export_data = [['X' for _ in range(Dim)] for _ in range(Dim)]
         string_to_export = ""
         num = 1

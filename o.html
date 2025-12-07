@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href=".\style.css" />
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" />
+</head>
+<body>
+<h1
+id="modélisation-graphes-et-algorithmes-projet-calcul-dun-couplage-dans-un-graphe-biparti">Modélisation,
+Graphes et Algorithmes Projet : calcul d’un couplage dans un graphe
+biparti</h1>
+<ul>
+<li>Joachim Larrouy : <a
+href="mailto:nathan.rissot@etu.univ-orleans.fr"><code>joachim.larrouy@etu.univ-orleans.fr</code></a></li>
+<li>Nathan Rissot : <a
+href="mailto:nathan.rissot@etu.univ-orleans.fr"><code>nathan.rissot@etu.univ-orleans.fr</code></a></li>
+</ul>
+<h2 id="utilisation">Utilisation</h2>
+<p>Programme a été développé avec la version 3.13 de python. Le code
+utilisant des annotations de type, une version 3.5 ou ultérieure est
+requis.</p>
+<p>Le programme attend en arguement un chemin vers le fichier contenant
+la représentation de l’échiquier mutilé, et un nom pour le fichier de
+sortie en cas de succés de pavage.</p>
+<pre><code>py ./main.py &lt;fichier_entrée.txt&gt; &lt;nom_fichier_sortie&gt;</code></pre>
+<h2 id="partie-théorique">Partie Théorique</h2>
+<h3 id="question-1">Question 1</h3>
+<p><em>Expliquez pourquoi le graphe représentant l’échiquier mutilé est
+un graphe biparti</em>.</p>
+<p>Soit le graphe <span class="math inline">G=(V, E)</span> representant
+l’échiquier tel qu’indiqué dans l’énoncé. Soit deux ensembles <span
+class="math inline">N</span> et <span class="math inline">B</span> tel
+que <span class="math inline">V = N \biguplus B</span>, chaque sommet
+representant une case noire (resp. blanche) est placé dans l’ensemble
+<span class="math inline">N</span> (resp. <span
+class="math inline">B</span>).</p>
+<p>Deux sommets appartiennent à une arête de <span
+class="math inline">E</span> ssi les cases de l’échiquiers qu’ils
+represententent sont adjacentes, comme chaque case de l’échiquier
+(mutilé ou non) ne peut être adjacente qu’a des cases de l’autre
+couleur, les sommets du graphe ne peuvent eux aussi n’êtres adjacent
+qu’a des sommets représentant des cases de l’autre couleur.</p>
+<p>(Bonus: le graphe <span class="math inline">G</span> est 2-colorable,
+ce qui est évident sachant qu’il est bipartite, une bipartition étant
+équivalent à une 2-coloration.)</p>
+<p>Donc: <span class="math display">
+\nexists (v_1, v_2) \in E \text{ tq } v_1, v_2 \in B
+\text{ et }
+\nexists (v_1, v_2) \in E \text{ tq }  v_1, v_2 \in N
+</span> la séparation de l’ensembles <span class="math inline">V</span>
+entre <span class="math inline">N</span> et <span
+class="math inline">B</span> selon la couleur de la case représentée est
+donc bien une bipartion du graphe.</p>
+<div style="break-after: page;">
+
+</div>
+<h3 id="question-2">Question 2</h3>
+<p><em>Montrez que ce graphe contient au plus 2n arêtes, où n est le
+nombre de cases de l’échiquier mutilé.</em></p>
+<p>On note <span class="math inline">n_{i,j}</span> le sommet du graphe
+représentant la case de l’échiquier aux coordonnées <span
+class="math inline">i,j</span> et soit <span
+class="math inline">m</span> le nombre d’arêtes de <span
+class="math inline">G</span> (<span class="math inline">m =
+|E|</span>).</p>
+<p>Nous cherchons a reconstruire le graphe d’un échiquier mutilé en
+ajoutant un à un les sommets représentant une case à notre graphe. Pour
+cela on choisis de les ajouters dans l’ordre suivant :</p>
+<p>Parmis les cases qui ne sont pas encore représenté possédant le plus
+petit indice i, nous choisissons celle possdédant le plus petit indice
+j. (ie. la case la plus en haut a gauche n’ayant pas encore été
+ajoutée.)</p>
+<p><u><b>Cas de base</b></u> : Prenons un échiquier contenant une seule
+case, ce graphe respecte bien la propriétée <span class="math inline">m
+= 0 \le 2n = 2</span></p>
+<p><u><b>Récurrence</b></u> : Prenons un échiquier mutilé de taille
+<span class="math inline">N - 1</span>, auquel on veut rajouter une case
+<span class="math inline">n_{i&#39;,j&#39;}</span>. Par hypothèse de
+récurrence, il possède la propriété : <span class="math inline">(m - 2)
+\le 2(n - 1)</span>.</p>
+<p>Rajoutons cette case. De par notre méthode de construction : cette
+nouvelle case peut avoir pour voisins <span
+class="math inline">n_{i&#39;-1,j&#39;}</span> ou <span
+class="math inline">n_{i&#39;, j&#39;-1}</span>. On ajoute donc au
+maximum 2 arrêtes si ces deux voisins existent. ce qui nous donne donc
+<span class="math inline">(m-2)+2\le 2(n - 1 + 1)</span>. On a bien :
+<span class="math inline">m \le 2n</span> .</p>
+<p>note : S’il possède moins de deux voisins, la propriété reste vrai :
+<span class="math inline">a + b \le c + 2</span> est vrai si : <span
+class="math inline">a \le c</span> et <span class="math inline">b \le
+2</span>.</p>
+<h3 id="question-3">Question 3</h3>
+<p><em>Expliquez en quoi un couplage parfait, dans le graphe
+représentant l’échiquier mutilé, est utile pour le paver des
+dominos.</em></p>
+<p>Chaque arête de <span class="math inline">E</span> represente une
+paire de cases adjacentes de l’échiquier. Un couplage est un sous
+ensemble de <span class="math inline">E</span>, c’est a dire une
+collection de paires de cases adjacentes, ne se chevauchant pas les unes
+les autres.</p>
+<p>Un couplage parfait est donc une collection de paire de cases
+adjacentes telles que toutes les cases soient incluses, sans qu’il y-ait
+de de chevauchement.</p>
+<p>Une collection de paire de cases adjacentes telles que toute les
+cases soient couvertes sans chevauchement est un pavage avec des
+dominos.</p>
+<h2 id="implémentation">Implémentation</h2>
+<p>Nous avons choisi de representer les sommets sous forme de chaine de
+caractère décrivant leur position de l’échiquier
+<code>"&lt;couleur:B|N&gt;-&lt;x&gt;:&lt;y&gt;"</code>, les arêtes (et
+arcs) comme des tuple(sommet, sommet). Les Graphes sont representé par
+une classe <code>Graph</code> ayant comme attribut les ensembles <span
+class="math inline">B</span>, <span class="math inline">N</span> de
+sommets, et l’ensemble <span class="math inline">E</span> des arêtes</p>
+<blockquote>
+<p>Remarque: l’ensemble des sommet <span class="math inline">V</span>
+est aussi conservé et est calculé comme <span class="math inline">N \cup
+B</span>.</p>
+</blockquote>
+<p>Nous avons choisi d’utiliser des <code>set</code> pour leur
+transparence avec la formalisation et la simplicité d’écriture des
+opérations.</p>
+<h3 id="question-5">Question 5</h3>
+<p><em>Écrire une fonction</em> <code>construire_niveaux</code> <em>qui
+attend en paramètre un graphe</em> <span class="math inline">G_M</span>
+<em>et qui construit le graphe des niveaux ainsi que la valeur</em>
+<span class="math inline">k</span>.</p>
+<ul>
+<li><strong>Entrée</strong> : le graphe <span
+class="math inline">G_M</span>.</li>
+<li><strong>Sortie</strong> : <span class="math inline">H</span> le
+graphe des niveaux, <span class="math inline">k</span> le nombre de
+niveau de <span class="math inline">H</span>.</li>
+</ul>
+<pre class="pseudocode"><code>fonction construire_niveaux(GM, k) {
+    soit freeN (resp. freeB) l&#39;ensemble des sommets noirs (resp. blancs) libres, c-a-d N (resp B) privé des sommets captifs, donc appartenant à des arcs retourné B -&gt; N au lieu de N -&gt; B: 
+    freeN = N \ {y | (x,y) ∈ E et y ∈ N}
+    freeB = B \ {x | (x,y) ∈ E et x ∈ B}
+
+    itération actuelle &lt;- freeN
+    listeNiveaux[0] &lt;- freeN
+
+    si itération actuelle est vide, alors {
+        retourner le graphe vide et 0
+    }
+
+    k &lt;- 0 
+    tant que l&#39;on a pas atteint un sommet de freeB {
+        pour chaque sommet n de l&#39;itération actuelle {
+            pour chaque sommet voisin de n {
+                ajouter le sommet à l&#39;itération suivante
+                ajouter le sommet dans H.N ou H.B selon sa couleur
+                ajouter l&#39;arc entre n et son voisin dans H.E
+            }
+        }
+        k++
+        listeNiveaux[k] &lt;- itération suivante
+        si on a trouvé un sommet de freeB dans l&#39;itération suivante, alors {
+            on retourne le graphe H(HN, HB, HE, listeNiveaux) et k
+        } sinon {
+            si itération suivante est vide, alors {
+                cas d&#39;échec, le graphe n&#39;est pas pavable,
+                retourner le graphe H(HN, HB, HE, listeNiveaux) et k
+            }
+            itération actuelle &lt;- itération suivante
+            itération suivante &lt;- ∅
+        }
+    }
+}</code></pre>
+<div style="break-after: page;">
+
+</div>
+<h3 id="question-7---chemins-augmentants">Question 7 - chemins
+augmentants</h3>
+<p><em>Écrire une fonction</em> <code>chemins_augmentants</code> <em>qui
+se charge de calculer l’ensemble</em> <span class="math inline">P</span>
+<em>de chemins utilisés par l’algorithme de</em>
+<code>HopcroftKarp</code></p>
+<ul>
+<li><strong>Entrée</strong> : <span class="math inline">H^T</span> le
+graphe transposé de <span class="math inline">H</span>.</li>
+<li><strong>Sortie</strong> : une liste de chemins augmentants.</li>
+</ul>
+<pre class="pseudocode"><code>fonction chemins_augmentants(HT) {
+    ajouter les sommets &lt;START&gt; avant les sommet du niveau k et &lt;END&gt; aprés les sommets du niveau 0
+    ajouter les arcs entre &lt;START&gt; et les sommets du niveau k et entre &lt;END&gt; et les sommets du niveau k
+    sommet autorisé &lt;- HT.V
+
+    chemins trouvés &lt;- ∅
+    
+    tant qu&#39;il existe des chemins trouvable {
+        trouver un chemin de &lt;START&gt; à &lt;END&gt; avec la recherche en profondeur en ne passant que par des sommets autorisés
+        
+        sommet autorisé &lt;- sommet autorisé \ sommets du chemin
+        
+        chemins trouvés &lt;- chemins trouvés ∪ chemin
+    }
+    retourner les chemins trouvés
+
+}</code></pre>
+</body>
+</html>

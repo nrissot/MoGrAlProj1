@@ -1,0 +1,1 @@
+pandoc .\README.md -t html -o o.html -s --katex --css ".\style.css"
