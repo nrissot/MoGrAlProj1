@@ -1,14 +1,13 @@
 # Modélisation, Graphes et Algorithmes Projet : calcul d’un couplage dans un graphe biparti
 
-- Joachim Larrouy : [`joachim.larrouy@etu.univ-orleans.fr`](mailto:nathan.rissot@etu.univ-orleans.fr)
+- Joachim Larrouy : [`joachim.larrouy@etu.univ-orleans.fr`](mailto:joachim.larrouy@etu.univ-orleans.fr)
 - Nathan Rissot : [`nathan.rissot@etu.univ-orleans.fr`](mailto:nathan.rissot@etu.univ-orleans.fr)
 
 ## Utilisation
 
-Programme a été développé avec la version 3.13 de python.
-Le code utilisant des annotations de type, une version 3.5 ou ultérieure est requis.
+Le programme a été développé et testé uniquement avec la version 3.13 de python, nous ne pouvons pas garantir le bon fonctionnement dans une version antérieur à celle ci
 
-Le programme attend en arguement un chemin vers le fichier contenant la représentation de l'échiquier mutilé, et un nom pour le fichier de sortie en cas de succés de pavage.
+Le programme attend en argument un chemin vers le fichier contenant la représentation de l'échiquier mutilé, et un nom pour le fichier de sortie en cas de succés de pavage.
 
 ```
 py ./main.py <fichier_entrée.txt> <nom_fichier_sortie>
