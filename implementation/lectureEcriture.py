@@ -1,31 +1,53 @@
 from graphe import Graph, node, edge
+from math import log10
 
-PATH = "data/echiquier.txt"
+IMPORT_PATH = "data/echiquier.txt"
+EXPORT_PATH = "data/pavage.txt"
 
-def lectureGraphe(path:str = PATH) -> Graph :
-    format:int
-    lines : list[str]
+def lectureGraphe(path:str = IMPORT_PATH) -> tuple[Graph, int] :
+    formatGraphe : int = 0
     with open(path) as file:
-        format = int(file.readline())
-        lines = file.readlines()
-    chessBoard : list[list[str]] = [line.split(" ") for line in lines]
-    N : set[node] = set()
+        formatGraphe = int(file.readline())
+        lines = [line.removesuffix("\n").split(" ") for line in file.readlines()]
+    assert len(lines) == formatGraphe
+    assert [(len(line) == formatGraphe) for line in lines] == [True for _ in range(formatGraphe)]
     B : set[node] = set()
+    N : set[node] = set()
+    X : set[node] = set()
     E : set[edge] = set()
-    for i in range(format):
-        for j in range(format):
-            cell = chessBoard[i][j]
-            # if empy, skip
-            if cell == "X":
-                continue
-            else :
-                # else add the cell
-                if cell == "B":
-                    B.add(f"{i}:{j}")
-                else :
-                    N.add(f"{i}:{j}")
-                    # add the edges w/ the neighbors
-                    for (ni, nj) in ((i+1,j), (i-1,j), (i,j+1), (i,j-1)):
-                        if 0 <= ni < format and 0 <= nj < format:
-                            E.add((f"{i}:{j}", f"{ni}:{nj}"))
-    return Graph(N, B, E)
+    for x in range(formatGraphe): 
+        for y in range(formatGraphe):
+            if lines[x][y] == "B":
+                B.add(_node_id(x,y,"B"))
+            elif lines[x][y] == "N":
+                N.add(_node_id(x,y,"N"))
+                for (i,j) in [(x-1,y), (x+1,y), (x, y-1), (x, y+1)]:
+                    if 0 <= i and i < formatGraphe and 0 <= j and j < formatGraphe:
+                        if lines[i][j] == "B":
+                            E.add((_node_id(x,y,"N"), _node_id(i,j,"B")))
+            else:
+                X.add(_node_id(x,y,"X"))
+
+    assert len(B) + len(N) + len(X) == formatGraphe*formatGraphe
+    assert [x in N and y in B for (x,y) in E] == [True for _ in range(len(E))]
+    
+    return Graph(N, B, E), formatGraphe
+
+def _node_id(x:int, y:int, tag:str) :
+    return f"{tag}-{x}:{y}"
+
+def ecriturePavage(M:list[edge],Dim: int):
+    with open(EXPORT_PATH, "w", encoding="utf-8") as file:
+        to_export_data = [['X' for _ in range(Dim)] for _ in range(Dim)]
+        string_to_export = ""
+        num = 1
+        taillepad = int(log10(len(M))) + 2
+        for edge in M:
+            to_export_data[int(edge[0][2])][int(edge[0][4])] = str(num)
+            to_export_data[int(edge[1][2])][int(edge[1][4])] = str(num)
+            num += 1
+        for i in range(Dim) :
+            for j in range(Dim) :
+               string_to_export += (to_export_data[i][j]).rjust(taillepad)
+            string_to_export += '\n'
+        print(string_to_export, file=file)

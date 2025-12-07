@@ -8,10 +8,23 @@ class Graph:
     B : set[node] # White Vertices
     E : set[edge] # Edges
 
-    def __init__(self, N:list[node], B:list[node], E:list[edge]):
-        self.N = set(N)
-        self.B = set(B)
-        self.E = set(E)
+    def __init__(self, N:set[node], B:set[node], E:set[edge]):
+        """
+        Constructeur __init__ d'un Graphe
+        
+        :param self: self
+        :param N: l'ensemble des sommets noirs du graphe
+        :type N: set[node]
+        :param B: l'ensemble des sommets blancs du graphe
+        :type B: set[node]
+        :param E: l'ensemble des arêtes du graphe (par convention on on respecte ∀{x,y}∈ E, x ∈ N, y ∈ B )
+        :type E: set[edge]
+        """
+        assert type(N) == set and type(B) == set and type(E) == set
+
+        self.N = N.copy()
+        self.B = B.copy()
+        self.E = E.copy()
         self.V = self.N.union(self.B)
     
     def __str__(self) -> str:
@@ -20,7 +33,20 @@ class Graph:
 class LevelGraph(Graph):
     Levels : list[set[node]]
 
-    def __init__(self, N:list[node], B:list[node], E:list[edge], Levels:list[set[node]]):
+    def __init__(self, N:set[node], B:set[node], E:set[edge], Levels:list[set[node]]):
+        """
+        Constructeur __init__ d'un Graphe de Niveaux (un graphe stockant la liste des sommets à chaque niveau)
+        
+        :param self: self
+        :param N: l'ensemble des sommets noirs du graphe
+        :type N: set[node]
+        :param B: l'ensemble des sommets blancs du graphe
+        :type B: set[node]
+        :param E: l'ensemble des arêtes du graphe (par convention on on respecte ∀{x,y}∈ E, x ∈ N, y ∈ B )
+        :type E: set[edge]
+        :param Levels: la liste des ensembles de sommets pour chaque niveau
+        :type Levels: list[set[node]]
+        """
         super().__init__(N, B, E)
         self.Levels = Levels
     
@@ -44,7 +70,7 @@ def construire_GM(G:Graph, M:set[edge]) -> Graph :
     :return: le graphe G_M construit
     :rtype: Graph
     """
-    return Graph(G.N, G.B, [((y,x) if ((x,y) in M) else (x,y)) for (x,y) in G.E])
+    return Graph(G.N, G.B, set([((y,x) if ((x,y) in M) else (x,y)) for (x,y) in G.E]))
 
 # Question 5 - construire_niveaux
 def construire_niveaux(GM:LevelGraph) -> tuple[LevelGraph, int] :
@@ -88,21 +114,25 @@ def construire_niveaux(GM:LevelGraph) -> tuple[LevelGraph, int] :
     HE : set[edge] = set()
     HL : list[set[node]] = [ ]
     HL.append(currentIteration)
-    k = 0
+    k : int  = 0
 
     if len(currentIteration) == 0:
-        return LevelGraph(HN, HB, HE, HL), k 
+        return LevelGraph(HN, HB, HE, HL), k
+    
+
+    added_nodes : set[node] = set()
 
     shouldReturn : bool = False
     while True :
         for n in currentIteration:
             # add every neighbors of the node to the nextIteration set, and build the H graph
             for (x, y) in GM.E:
-                if x == n:
+                if x == n and y not in added_nodes:
+                    added_nodes.add(y)
                     nextIteration.add(y)
                     # check wether the node is black or white node, and thus 
                     # where it should be stored in the new H Graph.
-                    if k %2 == 0:
+                    if k % 2 == 0:
                         HB.add(y)
                         # if we reached a free white node, we have to break after this iteration
                         if y in freeB:
@@ -116,12 +146,14 @@ def construire_niveaux(GM:LevelGraph) -> tuple[LevelGraph, int] :
         k+=1
         HL.append(nextIteration)
         # if we reached a free white node 
-        if shouldReturn:
+        if shouldReturn :
             # we remove the captive nodes from the last level of H 
             # to facilitate the calculation of the augmenting path
             HL[-1] = HL[-1] - captiveB
             return LevelGraph(HN, HB, HE, HL), k
         else :
+            if len(nextIteration) == 0 :
+                return LevelGraph(HN, HB, HE, HL), 0
             currentIteration = nextIteration
             nextIteration = set()
 
@@ -132,72 +164,101 @@ def renverser(H:LevelGraph) -> LevelGraph:
     
     :param H: le graphe que l'on veut retourner 
     :type H: LevelGraph
-    :return: H^T le graphe retourné
+    :return: H^T le graphe transposé
     :rtype: LevelGraph
     """
-    return LevelGraph(H.N, H.B, [(y,x) for (x,y) in H.E], H.Levels)
+    return LevelGraph(H.N, H.B, set([(y,x) for (x,y) in H.E]), H.Levels)
 
 # Question 7 - chemins augmentants
 def chemins_augmentants(HT:LevelGraph, k:int) -> list[edgePath]:
     """
-    Calcule, a l'aide d'un parcours en profondeur, les chemins augmentant dans graphe HT allant 
-    d'un sommet libre blanc à un sommet libre noir. 
+    Construits des chemins augmentants entre sommet blancs libres et des sommets noirs libre 
+    dans le graphe H^T transposé de H le graphe des niveau.
 
-    :param HT: le graphe dans lequel on souhaite trouver des chemins augmentants
+    Si cette fonction ne trouve pas de chemins augmentant, elle renvoie une liste vide, 
+    c'est alors le signe que l'algorithme à terminé
+
+    :param HT: le graphe H^T transposé de H le graphe des niveau
     :type HT: LevelGraph
-    :param k: le nombre de niveaux du graphe
+    :param k: la profondeur (le nombre de niveaux) du graphe des niveaux (et donc de son transposé)
     :type k: int
-    :return: une liste de chemins augmentants trouvé (peut être vide)
+    :return: un liste (potentiellement vide) de chemins augmentants de poid minimaux.
     :rtype: list[edgePath]
     """
 
-    paths : list[edgePath] = [ ]
-    usable_edges : list[edge] = HT.E.copy()
+    # we add a <START> and <END> nodes to facilitate the dfs explorations
+    start : node = "<START>"
+    end   : node = "<END>"
 
-    # foreach free white node in the last level
-    for b in HT.Levels[-1]:
-        # recursive dfs trying to find a path (None if no path is found)
-        path : edgePath | None = _depth_first_search(b, usable_edges, HT.Levels[0])
-        if path != None:
-            paths.append(path)
-            # calculate the edges that are no longer usable due to them containing a node 
-            # that was used to build a path
-            nodesAlongThePath : set[node] = set()
-            for (x, y) in path:
-                nodesAlongThePath.add(x)
-                nodesAlongThePath.add(y)
-            new_usable_edges : list[edge] = [ ]
-            for (x,y) in usable_edges:
-                if not (x in nodesAlongThePath or y in nodesAlongThePath):
-                    new_usable_edges.append((x,y))
-            usable_edges = new_usable_edges
-                                    
-    return paths
+    # prepare the output list
+    out : list[edgePath] = [ ]
 
-
-def _depth_first_search(start:node, E:set[edge], final:set[node]) -> edgePath | None:
-    """
-    [PRIVATE HELPER] Récupère un chemin parmi les arêtes non utilisées depuis un sommet de départ vers un sommet noir libre.
+    # add new edges between <START> and the nodes from level k and between <END> and nodes from level 0.
+    usable_edges = HT.E.union([(start, n) for n in HT.Levels[-1]]).union([(n, end) for n in HT.Levels[0]])
     
-    :param start: Sommet de départ
-    :type start: node
-    :param E: Les arêtes disponibles
-    :type E: set[edge]
-    :param final: L'ensemble des sommets noirs libres
-    :type final: set[node]
-    :return: Un chemin valide s'il existe, None sinon
-    :rtype: edgePath | None
+    # add the <START> and <END> nodes to the list of nodes used to explore the graph 
+    usable_nodes = HT.V.union((end, start))
+
+    # set the flag
+    not_done : bool = True
+
+    # while we havent explored the whole graph
+    while not_done:
+        # initialize the new path
+        current_constructed_path : edgePath = [ ]
+        
+        # use recursive DFS to try and find a new augmenting path 
+        path_attempt : list[node] | None = _depthFirstSearch_rec(usable_edges, usable_nodes, start, end)
+        if path_attempt == None:
+            # there isnt any more possible path in this configuration
+            not_done = False
+        else :
+            # for every node of the path apart from <START> and <END>
+            for i in range(1, len(path_attempt)-2):
+                # for every edge
+                for (x, y) in HT.E:
+                    # if the edge is an edge of the path, add it to the path, 
+                    # and remove its nodes from the nodes that are allowed to be used
+                    if x == path_attempt[i] and y == path_attempt[i+1]:
+                        current_constructed_path.append((x,y))
+                        usable_nodes.discard(x)
+                        usable_nodes.discard(y)
+            # add the path to output list
+            out.append(current_constructed_path)
+    return out
+                    
+
+    
+def _depthFirstSearch_rec(edges:set[edge], usable_nodes:set[node] , current:node, END:node) -> list[node] | None :
+    """
+    Implementation récursive d'une recherche en profondeur dans un graph tree-like (sans cycle).
+    
+    :param edges: les arêtes que la recherche peut emprunter
+    :type edges: set[edge]
+    :param usable_nodes: les sommets dont l'exploration est autorisée 
+    :type usable_nodes: set[node]
+    :param current: le sommet actuel depuis lequel on explore
+    :type current: node
+    :param END: le sommet <END> indiquant le bas de l'arbre 
+    :type END: node
+    :return: un chemin depuis le sommet actuel jusqu'a <END> si il en existe un, sinon None 
+    :rtype: list[node] | None
     """
 
-    rec : edgePath | None
-    for (x,y) in E:
-        if x == start:
-            if y in final:
-                return [(x,y)]
-            rec = _depth_first_search(y, E, final)
-            if rec != None :
-                return [(x,y), *rec]
+    # stop condition : we are at the bottom of the tree
+    if current == END:
+        return [current]
+    for (x,y) in edges:
+        # for each allowed neighbor of current
+        if x == current and y in usable_nodes:
+            # recursively search
+            path : list[node] | None  = _depthFirstSearch_rec(edges, usable_nodes, y, END)
+            # the search reach the bottom of the tree, reconstruct the path on the way up
+            if path != None:
+                return [x, *path]
+    # no path found.
     return None
+    
 
 # Question 8 - HopcroftKarp
 def HopcroftKarp(G:Graph) -> set[edge]:
@@ -217,12 +278,8 @@ def HopcroftKarp(G:Graph) -> set[edge]:
         P : list[edgePath] = chemins_augmentants(HT, k)
         # flatten and flip the edges so that they face N -> B
         PreparedP : set[edge] = set([(y,x) if x in G.B else (x,y) for p in P for (x,y) in p])
-        print("\n\nP", P, PreparedP)
-        print("\nM", M)
         M = _différence_symétrique(M, PreparedP)
-        print("\nnew M" , M)
         if len(P) == 0 :
-            print(M)
             return M
 
 def _différence_symétrique(A:set[edge], B:set[edge]) :
