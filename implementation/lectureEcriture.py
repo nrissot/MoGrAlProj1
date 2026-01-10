@@ -35,14 +35,20 @@ def _node_id(x:int, y:int, tag:str) :
     return f"{tag}-{x}:{y}"
 
 def ecriturePavage(M:list[edge],Dim: int, nom: str):
-    with open("data/" + nom + "txt", "w", encoding="utf-8") as file:
+    with open("data/" + nom + ".txt", "w", encoding="utf-8") as file:
         to_export_data = [['X' for _ in range(Dim)] for _ in range(Dim)]
         string_to_export = ""
         num = 1
         taillepad = int(log10(len(M))) + 2
         for edge in M:
-            to_export_data[int(edge[0][2])][int(edge[0][4])] = str(num)
-            to_export_data[int(edge[1][2])][int(edge[1][4])] = str(num)
+            
+            # fix for bigger graphs
+            _, a, b = edge[0].replace("-", ":").split(":")
+            _, c, d = edge[1].replace("-", ":").split(":")
+
+            to_export_data[int(a)][int(b)] = str(num)
+            to_export_data[int(c)][int(d)] = str(num)
+
             num += 1
         for i in range(Dim) :
             for j in range(Dim) :
