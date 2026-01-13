@@ -43,11 +43,13 @@ def ecriturePavage(M:list[edge],Dim: int, nom: str):
         for edge in M:
             
             # fix for bigger graphs
+            #___MODIFICATION START HERE________________________________
             _, a, b = edge[0].replace("-", ":").split(":")
             _, c, d = edge[1].replace("-", ":").split(":")
 
             to_export_data[int(a)][int(b)] = str(num)
             to_export_data[int(c)][int(d)] = str(num)
+            #___MODIFICATION END HERE__________________________________
 
             num += 1
         for i in range(Dim) :
